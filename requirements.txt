@@ -1,0 +1,13 @@
+#python==3.10.8
+numpy==1.24.1
+scipy==1.10.0
+scikit-learn==1.2.1
+pandas==1.5.3
+matplotlib==3.6.3
+tensorflow==2.8.0
+tensorflow-probability==0.16.0
+gpflow==2.6.4
+cplot==0.9.3
+gpflux==0.4.1
+protobuf==3.19.4
+# --no-deps uq360==0.2
