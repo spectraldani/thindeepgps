@@ -1,3 +1,4 @@
+import math
 import pickle
 import warnings
 from types import SimpleNamespace
@@ -5,15 +6,15 @@ from types import SimpleNamespace
 import numpy as np
 import sklearn.model_selection
 
-from tdgplib.helper import TrainTestSplit
+from tdgplib.helper.traintest import TrainTestSplit
 
 
 def scale_data(x, y):
     scaler = SimpleNamespace(x=sklearn.preprocessing.StandardScaler(), y=sklearn.preprocessing.StandardScaler())
     scaler.x.fit(x.train)
-    x = x.apply(lambda x: scaler.x.transform(x))
+    x = x.apply(scaler.x.transform)
     scaler.y.fit(y.train)
-    y = y.apply(lambda y: scaler.y.transform(y))
+    y = y.apply(scaler.y.transform)
     return x, y, scaler
 
 
@@ -32,31 +33,31 @@ def get_parabolas(random_seed, n_fold=2):
     n = 500
     rng = np.random.default_rng(19960111)
     m1, m2 = np.array([[-1, 1], [2, 1]])
-    X1 = rng.multivariate_normal(m1, s * np.eye(2), size=n // 2)
-    X2 = rng.multivariate_normal(m2, s * np.eye(2), size=n // 2)
-    y1 = X1[:, 0] ** 2 + X1[:, 0]
-    y2 = X2[:, 1] ** 2 + X2[:, 1]
+    x1 = rng.multivariate_normal(m1, s * np.eye(2), size=n // 2)
+    x2 = rng.multivariate_normal(m2, s * np.eye(2), size=n // 2)
+    y1 = x1[:, 0] ** 2 + x1[:, 0]
+    y2 = x2[:, 1] ** 2 + x2[:, 1]
 
-    X = np.concatenate([X1, X2], axis=0)
+    x = np.concatenate([x1, x2], axis=0)
     y = np.concatenate([y1, y2], axis=0)[:, None]
-    for X, y in get_folds(X, y, n_fold=n_fold, random_seed=random_seed):
-        X, y, scalers = scale_data(X, y)
-        yield X, y, scalers
+    for x, y in get_folds(x, y, n_fold=n_fold, random_seed=random_seed):
+        x, y, scalers = scale_data(x, y)
+        yield x, y, scalers
 
 
-def get_sinc(random_seed, n_fold=2, num_data=500):
+def get_sinc(random_seed, n_fold=2, num_data=350):
     rng = np.random.default_rng(19960111)
 
-    X = rng.random((num_data, 2)) * 2 - 1
-    W = np.stack([
-        np.sin(3.1414 * X[..., 0]) * X[..., 0] * 2,
-        np.cos(3.1414 * X[..., 0]) * 2,
+    x = rng.random((num_data, 2)) * 2 - 1
+    w = np.stack([
+        np.sin(3.1414 * x[..., 0]) * x[..., 0] * 2,
+        np.cos(3.1414 * x[..., 0]) * 2,
     ], axis=-1)[..., None]
-    Z = (X[:, None] @ W)[..., 0, 0]
-    y = (np.sinc(Z) - Z ** 2)[:, None]
-    for X, y in get_folds(X, y, n_fold=n_fold, random_seed=random_seed):
-        X, y, scalers = scale_data(X, y)
-        yield X, y, scalers
+    z = (x[:, None] @ w)[..., 0, 0]
+    y = (np.sinc(z) - z ** 2)[:, None]
+    for x, y in get_folds(x, y, n_fold=n_fold, random_seed=random_seed):
+        x, y, scalers = scale_data(x, y)
+        yield x, y, scalers
 
 
 def from_pickle(path, random_seed, n_fold=2):
@@ -64,14 +65,16 @@ def from_pickle(path, random_seed, n_fold=2):
     Returns the dataset in `path` relative to the current working directory
     """
     with open(path, "rb") as f:
-        X, y = pickle.load(f)
-    if X.shape[0] > 1000 * n_fold:
+        x, y = pickle.load(f)
+    n_fold = max(2, n_fold)
+    if x.shape[0] > (1500*n_fold)/(n_fold - 1):
+        sub_size = math.floor((1500*n_fold)/(n_fold - 1))
         rng = np.random.default_rng(random_seed)
-        warnings.warn(f'Dataset of size {X.shape[0]} is too large, subsampling to 1000 per fold')
-        idx = rng.choice(len(X), 1000 * n_fold, replace=False)
-        X, y = X[idx], y[idx]
+        warnings.warn(f'Dataset of size {x.shape[0]} is too large, subsampling to {sub_size}')
+        idx = rng.choice(len(x), sub_size, replace=False)
+        x, y = x[idx], y[idx]
 
     y = y.reshape(-1, 1)
-    for X, y in get_folds(X, y, n_fold, random_seed):
-        X, y, scalers = scale_data(X, y)
-        yield X, y, scalers
+    for x, y in get_folds(x, y, n_fold, random_seed):
+        x, y, scalers = scale_data(x, y)
+        yield x, y, scalers

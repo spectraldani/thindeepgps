@@ -23,7 +23,7 @@ def train_models(models, x, y):
         print(model_name)
         if isinstance(model, gpflux.models.DeepGP):
             model = model.as_training_model()
-        tdgplib.models_utils.train_model(model, dummy_monitor, train_data=(x.train, y.train))
+        tdgplib.training.train_model(model, dummy_monitor, train_data=(x.train, y.train))
 
 
 def calc_metrics(y_test, y_pred_mean, y_pred_var):
@@ -56,7 +56,7 @@ def true_data(X):
 
 # %%
 def predict_y(m, x):
-    likelihood_variance = tdgplib.models_utils.get_likelihood_variance(m)
+    likelihood_variance = tdgplib.helper.get_likelihood_variance(m)
     f_pred_mean, f_pred_var = m.predict_f(x)
     if len(f_pred_mean.shape) == 3:
         f_pred_mean = tf.reduce_mean(f_pred_mean, axis=0)
@@ -177,7 +177,7 @@ for i, (k, m) in enumerate(models.items()):
     ax = axs.flat[i]
     ax.set_visible(True)
     mean = y_preds[(k, 'mean')]
-    y_std = np.sqrt(tdgplib.models_utils.get_likelihood_variance(m).numpy())
+    y_std = np.sqrt(tdgplib.helper.get_likelihood_variance(m).numpy())
     std = np.sqrt(y_preds[(k, 'var')])
     lims = np.array([
         min(y.test.min(), mean.min()),
@@ -275,7 +275,7 @@ for i, k in enumerate(to_plot):
         ax = axs[1, i]
         ax.set_visible(True)
         mean = grid_preds[(k, 'mean')]
-        y_var = tdgplib.models_utils.get_likelihood_variance(m).numpy()
+        y_var = tdgplib.helper.get_likelihood_variance(m).numpy()
         std = np.sqrt(grid_preds[(k, 'var')] + y_var)
         nlpd_pmesh[k] = ax.pcolormesh(
             grid_input[..., 0], grid_input[..., 1],
