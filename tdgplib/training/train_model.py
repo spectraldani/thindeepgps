@@ -29,10 +29,10 @@ def train_model(
 ):
     variance_parameter = get_likelihood_variance(m)
 
-    print('Training', m)
+    print('Start training')
     last_initial = 0
     for i, (steps, train_variance, step_size) in enumerate(schedule):
-        print(f'#{i} round. {steps} - variance? {train_variance} step {step_size:.3e}')
+        print(f'#{i} round. {steps} - variance {train_variance} step {step_size:.3e}')
         opt = tf.optimizers.Adam(step_size)
         if isinstance(train_variance, bool):
             gpflow.set_trainable(variance_parameter, train_variance)

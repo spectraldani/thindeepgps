@@ -17,7 +17,7 @@ def get_likelihood_variance(m: object) -> gpflow.Parameter:
         assert isinstance(m.layers[-1], gpflux.layers.LikelihoodLayer), 'LikelihoodLayer has to have the last one'
         return m.layers[-1].likelihood.variance
     else:
-        raise NotImplemented(f'Unknown model type {type(m)}')
+        raise NotImplementedError(f'Unknown model type {type(m)}')
 
 
 def get_elbo(m: Union[gpflow.models.GPModel, gpflux.models.DeepGP], train_data=None) -> tf.Tensor:
@@ -36,7 +36,7 @@ def export_model(f: str, m: Union[gpflow.models.GPModel, gpflux.models.DeepGP, t
     elif isinstance(m, tf.keras.Model):
         m.save_weights(f + '.tf')
     else:
-        raise NotImplemented(f'Type {type(m)!r} not supported')
+        raise NotImplementedError(f'Type {type(m)!r} not supported')
 
 
 def import_model(f: str, m: Union[gpflow.models.GPModel, gpflux.models.DeepGP, tf.keras.Model]):
@@ -47,4 +47,4 @@ def import_model(f: str, m: Union[gpflow.models.GPModel, gpflux.models.DeepGP, t
     elif isinstance(m, tf.keras.Model):
         m.load_weights(f + '.tf')
     else:
-        raise NotImplemented(f'Type {type(m)!r} not supported')
+        raise NotImplementedError(f'Type {type(m)!r} not supported')

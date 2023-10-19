@@ -7,7 +7,6 @@ def root_mean_squared_error(observed_value, predict_mean):
 
 
 def negative_log_predictive_density(observed_value, predict_mean, predict_var):
-    n = observed_value.shape[0]
     inner = np.log(predict_var) + (observed_value - predict_mean) ** 2 / predict_var
     return 0.5 * (np.log(2 * np.pi) + np.mean(inner, axis=0))
 
